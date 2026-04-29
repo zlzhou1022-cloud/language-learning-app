@@ -1,0 +1,53 @@
+{
+  "common": {
+    "appName": "语言学习",
+    "loading": "加载中...",
+    "error": "错误",
+    "success": "成功"
+  },
+  "auth": {
+    "login": "登录",
+    "logout": "退出登录",
+    "signup": "注册",
+    "email": "邮箱",
+    "password": "密码",
+    "emailPlaceholder": "输入您的邮箱",
+    "passwordPlaceholder": "输入您的密码",
+    "sendMagicLink": "发送登录链接",
+    "checkEmail": "请查看您的邮箱以获取登录链接",
+    "loginDescription": "输入您的邮箱以接收登录链接",
+    "passwordLogin": "密码登录",
+    "passwordLoginDescription": "使用邮箱和密码登录",
+    "magicLink": "邮箱链接",
+    "signupSuccess": "账号创建成功！请查看邮箱确认。",
+    "signupSuccessCanLogin": "账号创建成功！现在可以登录了。",
+    "invalidCredentials": "邮箱或密码错误，请重试。",
+    "emailNotConfirmed": "请先确认您的邮箱。请查看收件箱。",
+    "rateLimitExceeded": "尝试次数过多，请稍后再试。",
+    "emailAlreadyRegistered": "邮箱已注册，请直接登录。",
+    "passwordTooWeak": "密码太弱，请使用至少 6 个字符。",
+    "linkExpired": "此登录链接已失效或已被使用，请重新发送。",
+    "backToLogin": "返回登录"
+  },
+  "dashboard": {
+    "title": "仪表板",
+    "welcome": "欢迎",
+    "totalWords": "总词汇量",
+    "recentWords": "最近的单词",
+    "noWords": "还没有单词。开始添加词汇吧！"
+  },
+  "navigation": {
+    "dashboard": "仪表板",
+    "vocabulary": "词汇",
+    "practice": "练习",
+    "settings": "设置"
+  },
+  "settings": {
+    "title": "设置",
+    "language": "语言",
+    "theme": "主题",
+    "themeLight": "明亮",
+    "themeDark": "暗黑",
+    "themeSystem": "跟随系统"
+  }
+}

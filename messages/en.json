@@ -1,0 +1,53 @@
+{
+  "common": {
+    "appName": "Language Learning",
+    "loading": "Loading...",
+    "error": "Error",
+    "success": "Success"
+  },
+  "auth": {
+    "login": "Login",
+    "logout": "Logout",
+    "signup": "Sign Up",
+    "email": "Email",
+    "password": "Password",
+    "emailPlaceholder": "Enter your email",
+    "passwordPlaceholder": "Enter your password",
+    "sendMagicLink": "Send Magic Link",
+    "checkEmail": "Check your email for the login link",
+    "loginDescription": "Enter your email to receive a magic link for login",
+    "passwordLogin": "Password",
+    "passwordLoginDescription": "Sign in with your email and password",
+    "magicLink": "Magic Link",
+    "signupSuccess": "Account created! Please check your email to confirm.",
+    "signupSuccessCanLogin": "Account created! You can now login.",
+    "invalidCredentials": "Invalid email or password. Please try again.",
+    "emailNotConfirmed": "Please confirm your email first. Check your inbox.",
+    "rateLimitExceeded": "Too many attempts. Please try again later.",
+    "emailAlreadyRegistered": "Email already registered. Please login instead.",
+    "passwordTooWeak": "Password is too weak. Use at least 6 characters.",
+    "linkExpired": "This login link has expired or already been used. Please request a new one.",
+    "backToLogin": "Back to login"
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "welcome": "Welcome",
+    "totalWords": "Total Words",
+    "recentWords": "Recent Words",
+    "noWords": "No words yet. Start adding vocabulary!"
+  },
+  "navigation": {
+    "dashboard": "Dashboard",
+    "vocabulary": "Vocabulary",
+    "practice": "Practice",
+    "settings": "Settings"
+  },
+  "settings": {
+    "title": "Settings",
+    "language": "Language",
+    "theme": "Theme",
+    "themeLight": "Light",
+    "themeDark": "Dark",
+    "themeSystem": "System"
+  }
+}

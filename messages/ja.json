@@ -1,0 +1,53 @@
+{
+  "common": {
+    "appName": "言語学習",
+    "loading": "読み込み中...",
+    "error": "エラー",
+    "success": "成功"
+  },
+  "auth": {
+    "login": "ログイン",
+    "logout": "ログアウト",
+    "signup": "登録",
+    "email": "メール",
+    "password": "パスワード",
+    "emailPlaceholder": "メールアドレスを入力",
+    "passwordPlaceholder": "パスワードを入力",
+    "sendMagicLink": "ログインリンクを送信",
+    "checkEmail": "ログインリンクをメールで確認してください",
+    "loginDescription": "メールアドレスを入力してログインリンクを受け取る",
+    "passwordLogin": "パスワード",
+    "passwordLoginDescription": "メールアドレスとパスワードでログイン",
+    "magicLink": "マジックリンク",
+    "signupSuccess": "アカウントが作成されました！メールを確認してください。",
+    "signupSuccessCanLogin": "アカウントが作成されました！今すぐログインできます。",
+    "invalidCredentials": "メールアドレスまたはパスワードが無効です。もう一度お試しください。",
+    "emailNotConfirmed": "まずメールを確認してください。受信トレイを確認してください。",
+    "rateLimitExceeded": "試行回数が多すぎます。後でもう一度お試しください。",
+    "emailAlreadyRegistered": "メールアドレスは既に登録されています。ログインしてください。",
+    "passwordTooWeak": "パスワードが弱すぎます。少なくとも6文字を使用してください。",
+    "linkExpired": "このログインリンクは期限切れか、すでに使用されています。再送信してください。",
+    "backToLogin": "ログインに戻る"
+  },
+  "dashboard": {
+    "title": "ダッシュボード",
+    "welcome": "ようこそ",
+    "totalWords": "総単語数",
+    "recentWords": "最近の単語",
+    "noWords": "まだ単語がありません。語彙を追加しましょう！"
+  },
+  "navigation": {
+    "dashboard": "ダッシュボード",
+    "vocabulary": "語彙",
+    "practice": "練習",
+    "settings": "設定"
+  },
+  "settings": {
+    "title": "設定",
+    "language": "言語",
+    "theme": "テーマ",
+    "themeLight": "ライト",
+    "themeDark": "ダーク",
+    "themeSystem": "システム"
+  }
+}
