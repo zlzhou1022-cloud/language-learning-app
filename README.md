@@ -17,17 +17,19 @@
 
 ### ✅ 已实现
 
-- 🔐 **身份验证**: Supabase Magic Link 登录
+- 🔐 **身份验证**: Supabase Magic Link + 密码登录
 - 🌍 **国际化**: 支持中文、英文、日文切换
 - 🎨 **主题管理**: 明亮/暗黑模式切换
 - 📱 **响应式布局**: 桌面侧边栏 + 移动底部导航
 - 🎯 **极简设计**: 瑞士平面设计风格，无圆角，大留白
+- 🤖 **对话式学习**: 基于 LLM 的生词学习功能
+- 👤 **用户设置**: 昵称和密码管理
 
 ### 🚧 待开发
 
-- 📚 词汇管理
-- 🎓 学习练习
-- ⚙️ 用户设置
+- 📚 词汇列表和详情
+- 🎓 学习练习和测验
+- 📊 学习进度统计
 
 ## 数据库结构
 
@@ -35,6 +37,7 @@
 ```sql
 - id: uuid (主键，关联 auth.users)
 - email: text
+- nickname: text (新增：用户昵称)
 - preferred_language: text (en/zh/ja)
 - created_at: timestamp
 - updated_at: timestamp
@@ -46,7 +49,13 @@
 - user_id: uuid (外键 -> profiles)
 - word: text
 - language: text (en/zh/ja)
-- definition_json: jsonb
+- phonetic: text (新增：音标)
+- definition_native: text (新增：母语释义)
+- definition_target: text (新增：目标语释义)
+- mnemonics: text (新增：助记法)
+- examples: jsonb (新增：例句数组)
+- conversation_history: jsonb (新增：对话历史)
+- definition_json: jsonb (保持兼容性)
 - proficiency_level: integer (0-5)
 - created_at: timestamp
 - updated_at: timestamp
@@ -59,6 +68,7 @@
 - Node.js 18+
 - npm 或 yarn
 - Supabase 账号
+- Google Gemini API Key（用于 LLM 功能）
 
 ### 安装步骤
 
@@ -75,14 +85,23 @@ npm install
 
 3. 配置环境变量
 
-复制 `.env.example` 到 `.env.local` 并填入你的 Supabase 配置：
+复制 `.env.example` 到 `.env.local` 并填入配置：
 
 ```env
 NEXT_PUBLIC_SUPABASE_URL=your-project-url
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
+GEMINI_API_KEY=your-gemini-api-key
 ```
 
-4. 运行开发服务器
+**获取 Gemini API Key**：访问 [Google AI Studio](https://makersuite.google.com/app/apikey)
+
+4. 应用数据库迁移
+```bash
+npm run db:push
+npm run db:types
+```
+
+5. 运行开发服务器
 ```bash
 npm run dev
 ```

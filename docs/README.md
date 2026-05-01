@@ -1,181 +1,96 @@
-# 📚 Language Learning App - 文档中心
+# 项目文档索引
 
-欢迎来到 Language Learning App 的文档中心。所有项目文档都已分类整理在这里。
-
----
-
-## 📖 快速导航
-
-### 🚀 开始使用
-- **[README.md](../README.md)** - 项目概述和快速开始
-- **[QUICKSTART.md](../QUICKSTART.md)** - 5 分钟快速启动指南
-- **[START_HERE.md](../START_HERE.md)** - 新手入门指南
-
-### 💻 开发指南
-- **[DEVELOPMENT.md](../DEVELOPMENT.md)** - 完整开发指南
-- **[ARCHITECTURE.md](../ARCHITECTURE.md)** - 系统架构文档
-- **[AGENTS.md](../AGENTS.md)** - AI Agent 使用规则
-
-### 🚢 部署和配置
-- **[DEPLOYMENT.md](../DEPLOYMENT.md)** - 部署指南
-- **[setup/](./setup/)** - 配置相关文档
-  - Supabase 设置
-  - 邮件配置
-  - 密码认证配置
-
-### 🐛 调试和故障排查
-- **[TROUBLESHOOTING.md](../TROUBLESHOOTING.md)** - 故障排查指南
-- **[debug/](./debug/)** - 调试相关文档
-  - 调试总结
-  - 路由问题修复
-  - 页面加载问题修复
-
-### 🔐 认证功能
-- **[auth/](./auth/)** - 认证相关文档
-  - 认证问题修复报告
-  - 认证测试指南
-  - Magic Link 安全修复
-
-### 🧪 测试
-- **[TEST_GUIDE.md](../TEST_GUIDE.md)** - 测试指南
-- **[CHECKLIST.md](../CHECKLIST.md)** - 功能完成度检查清单
-
-### 📊 项目管理
-- **[PROJECT_SUMMARY.md](../PROJECT_SUMMARY.md)** - 项目总结
-- **[DOCS_INDEX.md](../DOCS_INDEX.md)** - 文档索引
+**最后更新**: 2026-05-02  
+**版本**: 2.0.4
 
 ---
 
-## 📁 文档结构
+## 📚 核心文档
 
-```
-docs/
-├── README.md                    # 本文件 - 文档中心首页
-├── auth/                        # 认证相关文档
-│   ├── 认证问题最终修复总结.md
-│   ├── 认证问题修复报告.md
-│   ├── 认证问题2-最终修复.md
-│   ├── 认证修复总结.md
-│   ├── 认证测试指南.md
-│   └── 快速测试-错误信息清除.md
-├── debug/                       # 调试相关文档
-│   ├── 调试总结.md
-│   ├── DEBUG_REPORT.md
-│   ├── REDIRECT_DEBUG.md
-│   └── 页面加载问题修复报告.md
-├── setup/                       # 配置相关文档
-│   ├── SUPABASE_SETUP.md
-│   ├── SUPABASE_EMAIL_FIX.md
-│   ├── ENABLE_PASSWORD_AUTH.md
-│   └── PASSWORD_AUTH_UPDATE.md
-└── archive/                     # 归档文档
-    ├── FINAL_FIXES.md
-    ├── FIX_SIGNUP_LOGIN.md
-    ├── FIXES_APPLIED.md
-    ├── DELIVERY_REPORT.md
-    └── 快速修复指南.md
-```
+### 项目概览
+- **[README.md](../README.md)** - 项目介绍和快速开始
+- **[CURRENT_STATUS.md](CURRENT_STATUS.md)** - 当前项目状态和功能列表
+- **[ARCHITECTURE.md](ARCHITECTURE.md)** - 系统架构说明
+- **[AGENTS.md](AGENTS.md)** - AI Agent配置和规则
+
+### 开发指南
+- **[DEVELOPMENT.md](DEVELOPMENT.md)** - 开发环境设置和开发指南
+- **[SETUP_GUIDE.md](SETUP_GUIDE.md)** - 详细的项目设置指南
+- **[GET_GEMINI_KEY.md](GET_GEMINI_KEY.md)** - 获取Gemini API密钥
+
+### 部署文档
+- **[DEPLOYMENT.md](DEPLOYMENT.md)** - 部署指南
+- **[DEPLOYMENT_CHECKLIST.md](DEPLOYMENT_CHECKLIST.md)** - 部署检查清单
 
 ---
 
-## 🎯 按场景查找文档
+## 🎯 功能文档
 
-### 场景 1: 我是新开发者，想了解项目
-1. 阅读 [README.md](../README.md) - 了解项目概述
-2. 阅读 [QUICKSTART.md](../QUICKSTART.md) - 快速启动项目
-3. 阅读 [ARCHITECTURE.md](../ARCHITECTURE.md) - 理解系统架构
-4. 阅读 [DEVELOPMENT.md](../DEVELOPMENT.md) - 学习开发流程
+### AI对话和学习
+- **[AI_PROGRESS_EVALUATION.md](AI_PROGRESS_EVALUATION.md)** - AI驱动的进度评估系统
+- **[AI_PROGRESS_FIX.md](AI_PROGRESS_FIX.md)** - 进度评估修复和优化
+- **[FOCUS_GUIDANCE.md](FOCUS_GUIDANCE.md)** - 学习焦点引导功能
+- **[QUICK_TEST_GUIDE.md](QUICK_TEST_GUIDE.md)** - AI进度评估测试指南
 
-### 场景 2: 我要配置 Supabase
-1. 阅读 [setup/SUPABASE_SETUP.md](./setup/SUPABASE_SETUP.md) - Supabase 基础配置
-2. 阅读 [setup/SUPABASE_EMAIL_FIX.md](./setup/SUPABASE_EMAIL_FIX.md) - 邮件配置
-3. 阅读 [setup/ENABLE_PASSWORD_AUTH.md](./setup/ENABLE_PASSWORD_AUTH.md) - 密码认证配置
+### 用户界面
+- **[TOAST_AND_LEARNING_NOTES_UPDATE.md](TOAST_AND_LEARNING_NOTES_UPDATE.md)** - Toast通知和学习要点功能
+- **[QUALITY_INDICATOR_UPDATE.md](QUALITY_INDICATOR_UPDATE.md)** - 对话质量指示器
+- **[MOBILE_LOGOUT_FIX.md](MOBILE_LOGOUT_FIX.md)** - 手机端退出登录功能
 
-### 场景 3: 我遇到了问题
-1. 查看 [TROUBLESHOOTING.md](../TROUBLESHOOTING.md) - 常见问题解决方案
-2. 查看 [debug/](./debug/) - 具体问题的调试文档
-3. 查看 [auth/](./auth/) - 认证相关问题
-
-### 场景 4: 我要部署项目
-1. 阅读 [DEPLOYMENT.md](../DEPLOYMENT.md) - 部署指南
-2. 阅读 [CHECKLIST.md](../CHECKLIST.md) - 部署前检查清单
-3. 阅读 [TEST_GUIDE.md](../TEST_GUIDE.md) - 测试指南
-
-### 场景 5: 我要了解认证功能
-1. 阅读 [auth/认证问题最终修复总结.md](./auth/认证问题最终修复总结.md) - 认证功能概述
-2. 阅读 [auth/认证测试指南.md](./auth/认证测试指南.md) - 测试认证功能
-3. 阅读 [auth/认证问题修复报告.md](./auth/认证问题修复报告.md) - 技术细节
+### 数据和卡片
+- **[FIX_CARD_GENERATION_ERROR.md](FIX_CARD_GENERATION_ERROR.md)** - 卡片生成错误修复
+- **[LEARN_FEATURE.md](LEARN_FEATURE.md)** - 学习功能说明
 
 ---
 
-## 📝 文档维护
+## 🔧 技术文档
 
-### 文档分类说明
+### 认证系统
+- **[setup/SUPABASE_SETUP.md](setup/SUPABASE_SETUP.md)** - Supabase设置指南
+- **[setup/ENABLE_PASSWORD_AUTH.md](setup/ENABLE_PASSWORD_AUTH.md)** - 密码认证设置
+- **[setup/SUPABASE_EMAIL_FIX.md](setup/SUPABASE_EMAIL_FIX.md)** - 邮箱认证修复
 
-- **根目录文档**: 核心文档，经常使用
-- **auth/**: 认证功能相关的所有文档
-- **debug/**: 调试和问题修复文档
-- **setup/**: 配置和设置指南
-- **archive/**: 过时或已完成的文档归档
-
-### 添加新文档
-
-如果需要添加新文档，请按照以下规则：
-
-1. **认证相关** → `docs/auth/`
-2. **调试相关** → `docs/debug/`
-3. **配置相关** → `docs/setup/`
-4. **核心文档** → 项目根目录
-5. **过时文档** → `docs/archive/`
-
-### 文档命名规范
-
-- 使用清晰描述性的名称
-- 中文文档使用中文命名
-- 英文文档使用英文命名，单词用 `-` 连接
-- 例如: `认证问题修复报告.md`, `SUPABASE_SETUP.md`
+### 调试和问题修复
+- **[debug/DEBUG_REPORT.md](debug/DEBUG_REPORT.md)** - 调试报告
+- **[debug/REDIRECT_DEBUG.md](debug/REDIRECT_DEBUG.md)** - 重定向问题调试
 
 ---
 
-## 🔍 搜索文档
+## 📋 任务完成报告
 
-### 按关键词搜索
-
-- **认证/登录**: 查看 `auth/` 文件夹
-- **Supabase**: 查看 `setup/` 文件夹
-- **错误/问题**: 查看 `debug/` 文件夹和 `TROUBLESHOOTING.md`
-- **部署**: 查看 `DEPLOYMENT.md`
-- **开发**: 查看 `DEVELOPMENT.md`
-
-### 使用 grep 搜索
-
-```bash
-# 在所有文档中搜索关键词
-grep -r "关键词" docs/
-
-# 在特定文件夹中搜索
-grep -r "Magic Link" docs/auth/
-```
+### 最近完成的任务
+- **[TASK_12_COMPLETE.md](TASK_12_COMPLETE.md)** - 翻译修复和移动端优化
+- **[TASK_11_COMPLETE.md](TASK_11_COMPLETE.md)** - 学习焦点引导
+- **[TASK_10_COMPLETE.md](TASK_10_COMPLETE.md)** - AI进度评估修复
+- **[TASK_9_COMPLETE.md](TASK_9_COMPLETE.md)** - AI驱动的进度评估
+- **[TASK_8_COMPLETE.md](TASK_8_COMPLETE.md)** - 对话相关性检测
 
 ---
 
-## 📞 需要帮助？
+## 📦 归档文档
 
-如果你在文档中找不到需要的信息：
-
-1. 查看 [TROUBLESHOOTING.md](../TROUBLESHOOTING.md)
-2. 查看 [DOCS_INDEX.md](../DOCS_INDEX.md)
-3. 查看项目的 GitHub Issues
-4. 联系项目维护者
+历史文档和旧版本的修复报告已移至 **[archive/](archive/)** 目录。
 
 ---
 
-## 📅 最后更新
+## 🚀 快速链接
 
-**日期**: 2026-04-30  
-**版本**: 0.1.0  
-**状态**: 文档已整理完成
+### 新手入门
+1. 阅读 [README.md](../README.md)
+2. 查看 [CURRENT_STATUS.md](CURRENT_STATUS.md) 了解项目状态
+3. 按照 [SETUP_GUIDE.md](SETUP_GUIDE.md) 设置开发环境
+4. 获取 [Gemini API密钥](GET_GEMINI_KEY.md)
+5. 开始开发！
+
+### 功能开发
+1. 查看 [ARCHITECTURE.md](ARCHITECTURE.md) 了解系统架构
+2. 阅读相关功能文档
+3. 参考 [DEVELOPMENT.md](DEVELOPMENT.md) 开发指南
+
+### 部署上线
+1. 完成 [DEPLOYMENT_CHECKLIST.md](DEPLOYMENT_CHECKLIST.md)
+2. 按照 [DEPLOYMENT.md](DEPLOYMENT.md) 部署
 
 ---
 
-**祝你使用愉快！** 🎉
+**文档持续更新中** 📝

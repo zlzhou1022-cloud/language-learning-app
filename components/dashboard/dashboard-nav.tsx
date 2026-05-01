@@ -11,11 +11,10 @@ import {
   LogOut,
 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
-import { LanguageSwitcher } from '@/components/language-switcher';
-import { ThemeToggle } from '@/components/theme-toggle';
 
 const navItems = [
   { href: '/dashboard',  labelKey: 'dashboard',  icon: LayoutDashboard },
+  { href: '/learn',      labelKey: 'learn',      icon: BookOpen },
   { href: '/vocabulary', labelKey: 'vocabulary',  icon: BookOpen },
   { href: '/practice',   labelKey: 'practice',    icon: GraduationCap },
   { href: '/settings',   labelKey: 'settings',    icon: Settings },
@@ -93,15 +92,6 @@ export function DashboardNav({ mobile = false }: { mobile?: boolean }) {
 
       {/* 底部工具区 */}
       <div className="border-t border-border px-3 py-4 space-y-1">
-        {/* 语言 + 主题 同行 */}
-        <div className="flex items-center justify-between px-3 py-1.5">
-          <span className="text-xs text-muted-foreground">{tCommon('appName') && ''}</span>
-          <div className="flex items-center gap-1">
-            <LanguageSwitcher />
-            <ThemeToggle />
-          </div>
-        </div>
-
         {/* 登出 */}
         <button
           onClick={handleLogout}

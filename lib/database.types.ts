@@ -41,30 +41,51 @@ export type Database = {
     Tables: {
       dictionaries: {
         Row: {
+          conversation_history: Json | null
           created_at: string
           definition_json: Json
+          definition_native: string | null
+          definition_target: string | null
+          examples: Json | null
           id: string
           language: string
+          learning_notes: string | null
+          mnemonics: string | null
+          phonetic: string | null
           proficiency_level: number | null
           updated_at: string
           user_id: string
           word: string
         }
         Insert: {
+          conversation_history?: Json | null
           created_at?: string
           definition_json: Json
+          definition_native?: string | null
+          definition_target?: string | null
+          examples?: Json | null
           id?: string
           language: string
+          learning_notes?: string | null
+          mnemonics?: string | null
+          phonetic?: string | null
           proficiency_level?: number | null
           updated_at?: string
           user_id: string
           word: string
         }
         Update: {
+          conversation_history?: Json | null
           created_at?: string
           definition_json?: Json
+          definition_native?: string | null
+          definition_target?: string | null
+          examples?: Json | null
           id?: string
           language?: string
+          learning_notes?: string | null
+          mnemonics?: string | null
+          phonetic?: string | null
           proficiency_level?: number | null
           updated_at?: string
           user_id?: string
@@ -85,6 +106,7 @@ export type Database = {
           created_at: string
           email: string
           id: string
+          nickname: string | null
           preferred_language: string | null
           updated_at: string
         }
@@ -92,6 +114,7 @@ export type Database = {
           created_at?: string
           email: string
           id: string
+          nickname?: string | null
           preferred_language?: string | null
           updated_at?: string
         }
@@ -99,6 +122,7 @@ export type Database = {
           created_at?: string
           email?: string
           id?: string
+          nickname?: string | null
           preferred_language?: string | null
           updated_at?: string
         }

@@ -3,7 +3,7 @@ import { redirect } from 'next/navigation';
 import { setRequestLocale } from 'next-intl/server';
 import { AuthenticatedLayout } from '@/components/layouts/authenticated-layout';
 
-export default async function DashboardLayout({
+export default async function VocabularyLayout({
   children,
   params,
 }: {
