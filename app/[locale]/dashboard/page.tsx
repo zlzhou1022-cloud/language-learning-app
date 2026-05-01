@@ -27,6 +27,26 @@ export default async function DashboardPage({
     .select('*', { count: 'exact', head: true })
     .eq('user_id', user!.id);
 
+  // 获取最近的单词（最多5个）
+  const { data: recentWords } = await supabase
+    .from('dictionaries')
+    .select('id, word, created_at')
+    .eq('user_id', user!.id)
+    .order('created_at', { ascending: false })
+    .limit(5);
+
+  // 获取今日新学习的单词数量
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const { count: todayLearnedCount } = await supabase
+    .from('dictionaries')
+    .select('*', { count: 'exact', head: true })
+    .eq('user_id', user!.id)
+    .gte('created_at', today.toISOString());
+
+  // 今日待复习数量（暂时为0，等待后续实现）
+  const todayReviewCount = 0;
+
   // 优先显示昵称，否则显示邮箱用户名
   const displayName = profile?.nickname || profile?.email?.split('@')[0] || '';
 
@@ -56,29 +76,91 @@ export default async function DashboardPage({
 
       {/* 统计卡片区 — 档案卡风格 */}
       <div className="grid gap-px border border-border bg-border sm:grid-cols-2 lg:grid-cols-3">
-        {/* 词汇总数卡片 */}
-        <div className="flex flex-col gap-4 bg-background p-6">
+        {/* 词汇总数卡片 - 右下角箭头跳转 */}
+        <div className="relative flex flex-col gap-4 bg-background p-6">
           <div className="flex items-center justify-between">
             <span className="text-xs font-medium uppercase tracking-widest text-muted-foreground">
               {t('totalWords')}
             </span>
             <BookOpen strokeWidth={1.5} className="h-4 w-4 text-muted-foreground" />
           </div>
-          <div className="text-4xl font-semibold tracking-tight text-foreground">
-            {count ?? 0}
+          <div className="flex items-end justify-between">
+            <div className="text-4xl font-semibold tracking-tight text-foreground">
+              {count ?? 0}
+            </div>
+            {/* 右下角箭头链接 */}
+            <Link
+              href="/vocabulary"
+              className="flex h-6 w-6 items-center justify-center rounded text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+              title={t('totalWords')}
+            >
+              <svg
+                className="h-4 w-4"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.5"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3"
+                />
+              </svg>
+            </Link>
           </div>
         </div>
 
-        {/* 占位卡片 */}
+        {/* 今日待复习卡片 */}
         <div className="flex flex-col gap-4 bg-background p-6">
           <div className="flex items-center justify-between">
             <span className="text-xs font-medium uppercase tracking-widest text-muted-foreground">
-              {t('recentWords')}
+              {t('todayReviewed')}
             </span>
           </div>
-          <div className="text-4xl font-semibold tracking-tight text-foreground">—</div>
+          <div className="text-4xl font-semibold tracking-tight text-foreground">
+            {todayReviewCount}
+          </div>
+        </div>
+
+        {/* 今日已学习卡片 */}
+        <div className="flex flex-col gap-4 bg-background p-6">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-medium uppercase tracking-widest text-muted-foreground">
+              {t('todayLearned')}
+            </span>
+          </div>
+          <div className="text-4xl font-semibold tracking-tight text-foreground">
+            {todayLearnedCount ?? 0}
+          </div>
         </div>
       </div>
+
+      {/* 最近的单词列表 */}
+      {recentWords && recentWords.length > 0 && (
+        <div className="space-y-4">
+          <h2 className="text-sm font-medium uppercase tracking-widest text-muted-foreground">
+            {t('recentWords')}
+          </h2>
+          <div className="space-y-2">
+            {recentWords.map((word) => (
+              <Link
+                key={word.id}
+                href={`/learn?wordId=${word.id}`}
+                className="flex items-center justify-between border-l-2 border-border py-2 pl-4 pr-2 transition-colors hover:border-foreground hover:bg-muted"
+              >
+                <span className="text-sm font-medium text-foreground">{word.word}</span>
+                <span className="text-xs text-muted-foreground">
+                  {new Date(word.created_at).toLocaleDateString(locale, {
+                    month: 'short',
+                    day: 'numeric',
+                  })}
+                </span>
+              </Link>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* 空状态提示 */}
       {(count === 0 || count === null) && (

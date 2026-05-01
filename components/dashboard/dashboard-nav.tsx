@@ -6,6 +6,7 @@ import { cn } from '@/lib/utils';
 import {
   LayoutDashboard,
   BookOpen,
+  Library,
   GraduationCap,
   Settings,
   LogOut,
@@ -15,7 +16,7 @@ import { createClient } from '@/lib/supabase/client';
 const navItems = [
   { href: '/dashboard',  labelKey: 'dashboard',  icon: LayoutDashboard },
   { href: '/learn',      labelKey: 'learn',      icon: BookOpen },
-  { href: '/vocabulary', labelKey: 'vocabulary',  icon: BookOpen },
+  { href: '/vocabulary', labelKey: 'vocabulary',  icon: Library },
   { href: '/practice',   labelKey: 'practice',    icon: GraduationCap },
   { href: '/settings',   labelKey: 'settings',    icon: Settings },
 ] as const;

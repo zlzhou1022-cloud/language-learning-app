@@ -4,7 +4,8 @@
     "loading": "加载中...",
     "error": "错误",
     "success": "成功",
-    "back": "返回"
+    "back": "返回",
+    "cancel": "取消"
   },
   "auth": {
     "login": "登录",
@@ -36,7 +37,9 @@
     "totalWords": "总词汇量",
     "recentWords": "最近的单词",
     "noWords": "还没有单词。开始添加词汇吧！",
-    "addWord": "添加生词"
+    "addWord": "添加生词",
+    "todayReviewed": "今日已复习",
+    "todayLearned": "今日已学习"
   },
   "navigation": {
     "dashboard": "仪表板",
@@ -89,6 +92,7 @@
     "learningNotes": "学习要点",
     "learningNotesPlaceholder": "对话中关注的要点、易混淆点、使用场景等...",
     "learningNotesHint": "简洁记录你在对话中学到的关键点，帮助日后快速回忆",
+    "learningNotesHintEfficient": "记录这个单词的关键学习点，帮助日后快速回忆",
     "mnemonics": "助记法",
     "examples": "例句",
     "exampleSentence": "例句",
@@ -98,6 +102,10 @@
     "cardSaved": "卡片已保存",
     "saveFailed": "保存失败",
     "generating": "生成中...",
-    "typeMessage": "输入您的问题..."
+    "typeMessage": "输入您的问题...",
+    "modeDeep": "钻研模式",
+    "modeEfficient": "效率模式",
+    "modeDeepDesc": "通过AI对话深入学习",
+    "modeEfficientDesc": "快速生成卡片"
   }
 }

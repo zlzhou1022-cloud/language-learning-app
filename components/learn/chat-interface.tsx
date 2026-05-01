@@ -14,102 +14,159 @@ interface ChatInterfaceProps {
   existingCard?: DictionaryCard | null;
   onGenerateCard: (card: DictionaryCard) => void;
   onBack: () => void;
+  savedMessages?: ChatMessage[]; // 保存的对话历史
+  savedProgress?: number; // 保存的进度
+  onMessagesChange?: (messages: ChatMessage[], progress: number) => void; // 对话变化回调
 }
 
-export function ChatInterface({ word, existingCard, onGenerateCard, onBack }: ChatInterfaceProps) {
+export function ChatInterface({ word, existingCard, onGenerateCard, onBack, savedMessages, savedProgress, onMessagesChange }: ChatInterfaceProps) {
   const t = useTranslations('learn');
   const tCommon = useTranslations('common');
   const locale = useLocale();
 
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [messages, setMessages] = useState<ChatMessage[]>(savedMessages || []);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [toast, setToast] = useState<{ message: string; type: 'error' | 'success' | 'info' } | null>(null);
-  const [aiProgress, setAiProgress] = useState<number>(0); // AI评估的进度
+  const [aiProgress, setAiProgress] = useState<number>(savedProgress || 0); // AI评估的进度
+  const initializedRef = useRef(false); // 使用 ref 跟踪初始化状态，避免触发重渲染
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const abortControllerRef = useRef<AbortController | null>(null); // 用于中止流式请求
 
-  // 初始化对话
-  const initializeChat = async () => {
-    setLoading(true);
-
-    try {
-      const systemMessage: ChatMessage = {
-        role: 'system',
-        content: SYSTEM_ROLE,
-      };
-
-      let userMessage: ChatMessage;
-      
-      if (existingCard) {
-        // 继续已有卡片的对话
-        userMessage = {
-          role: 'user',
-          content: CONTINUE_CONVERSATION_PROMPT(existingCard),
-        };
-      } else {
-        // 新单词的初始对话
-        const languageMap: Record<string, string> = {
-          'zh': '中文',
-          'en': 'English',
-          'ja': '日本語',
-        };
-        
-        userMessage = {
-          role: 'user',
-          content: INITIAL_WORD_PROMPT(
-            word,
-            languageMap[locale] || 'English',
-            'English'
-          ),
-        };
-      }
-
-      const response = await fetch('/api/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          messages: [systemMessage, userMessage],
-          currentProgress: aiProgress, // 发送当前进度
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to get response');
-      }
-
-      const data = await response.json();
-
-      // 更新AI评估的进度
-      if (data.progress !== null && data.progress !== undefined) {
-        setAiProgress(data.progress);
-      }
-
-      // 只保存 AI 的回复，不显示初始的用户提示词
-      setMessages([
-        {
-          role: 'assistant',
-          content: data.response,
-        },
-      ]);
-    } catch (error) {
-      console.error('Failed to initialize chat:', error);
-      setMessages([
-        {
-          role: 'assistant',
-          content: 'Sorry, I encountered an error. Please try again.',
-        },
-      ]);
-    } finally {
-      setLoading(false);
-    }
-  };
-
+  // 当消息或进度变化时，通知父组件
   useEffect(() => {
-    // 组件挂载时初始化聊天 - 这是有意为之的
+    if (onMessagesChange && messages.length > 0) {
+      onMessagesChange(messages, aiProgress);
+    }
+  }, [messages, aiProgress, onMessagesChange]);
+
+  // 组件挂载时初始化聊天
+  useEffect(() => {
+    // 如果有保存的消息，不需要初始化
+    if (savedMessages && savedMessages.length > 0) {
+      return;
+    }
+
+    if (initializedRef.current) return; // 防止重复初始化
+    initializedRef.current = true;
+
+    const initializeChat = async () => {
+      setLoading(true);
+
+      try {
+        const systemMessage: ChatMessage = {
+          role: 'system',
+          content: SYSTEM_ROLE,
+        };
+
+        let userMessage: ChatMessage;
+        
+        if (existingCard) {
+          // 继续已有卡片的对话
+          userMessage = {
+            role: 'user',
+            content: CONTINUE_CONVERSATION_PROMPT(existingCard),
+          };
+        } else {
+          // 新单词的初始对话
+          const languageMap: Record<string, string> = {
+            'zh': '中文',
+            'en': 'English',
+            'ja': '日本語',
+          };
+          
+          userMessage = {
+            role: 'user',
+            content: INITIAL_WORD_PROMPT(
+              word,
+              languageMap[locale] || 'English',
+              'English'
+            ),
+          };
+        }
+
+        // 创建新的 AbortController
+        abortControllerRef.current = new AbortController();
+
+        const response = await fetch('/api/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            messages: [systemMessage, userMessage],
+            currentProgress: 0, // 初始进度为0
+          }),
+          signal: abortControllerRef.current.signal,
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to get response');
+        }
+
+        // 处理流式响应
+        const reader = response.body?.getReader();
+        const decoder = new TextDecoder();
+        let accumulatedContent = '';
+
+        // 添加一个空的助手消息用于流式更新
+        setMessages([
+          {
+            role: 'assistant',
+            content: '',
+          },
+        ]);
+
+        if (reader) {
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+
+            const chunk = decoder.decode(value);
+            const lines = chunk.split('\n').filter(line => line.trim());
+
+            for (const line of lines) {
+              try {
+                const data = JSON.parse(line);
+                accumulatedContent += data.content;
+
+                // 更新消息内容
+                setMessages([
+                  {
+                    role: 'assistant',
+                    content: accumulatedContent,
+                  },
+                ]);
+
+                // 如果是最后一块，更新进度
+                if (data.done && data.progress !== null && data.progress !== undefined) {
+                  setAiProgress(data.progress);
+                }
+              } catch (e) {
+                console.error('Failed to parse chunk:', e);
+              }
+            }
+          }
+        }
+      } catch (error: unknown) {
+        if (error instanceof Error && error.name === 'AbortError') {
+          console.log('Request was aborted');
+        } else {
+          console.error('Failed to initialize chat:', error);
+          setMessages([
+            {
+              role: 'assistant',
+              content: 'Sorry, I encountered an error. Please try again.',
+            },
+          ]);
+        }
+      } finally {
+        setLoading(false);
+        abortControllerRef.current = null;
+      }
+    };
+
     initializeChat();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [word, existingCard, locale, savedMessages]);
 
   // 自动滚动到底部
   useEffect(() => {
@@ -134,6 +191,9 @@ export function ChatInterface({ word, existingCard, onGenerateCard, onBack }: Ch
         content: SYSTEM_ROLE,
       };
 
+      // 创建新的 AbortController
+      abortControllerRef.current = new AbortController();
+
       const response = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -141,36 +201,82 @@ export function ChatInterface({ word, existingCard, onGenerateCard, onBack }: Ch
           messages: [systemMessage, ...messages, userMessage],
           currentProgress: aiProgress, // 发送当前进度
         }),
+        signal: abortControllerRef.current.signal,
       });
 
       if (!response.ok) {
         throw new Error('Failed to get response');
       }
 
-      const data = await response.json();
+      // 处理流式响应
+      const reader = response.body?.getReader();
+      const decoder = new TextDecoder();
+      let accumulatedContent = '';
 
-      // 更新AI评估的进度（只增不减）
-      if (data.progress !== null && data.progress !== undefined) {
-        setAiProgress((prev) => Math.max(prev, data.progress));
+      // 添加一个空的助手消息用于流式更新
+      setMessages((prev) => [
+        ...prev,
+        {
+          role: 'assistant',
+          content: '',
+        },
+      ]);
+
+      if (reader) {
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+
+          const chunk = decoder.decode(value);
+          const lines = chunk.split('\n').filter(line => line.trim());
+
+          for (const line of lines) {
+            try {
+              const data = JSON.parse(line);
+              accumulatedContent += data.content;
+
+              // 更新最后一条消息的内容
+              setMessages((prev) => {
+                const newMessages = [...prev];
+                newMessages[newMessages.length - 1] = {
+                  role: 'assistant',
+                  content: accumulatedContent,
+                };
+                return newMessages;
+              });
+
+              // 如果是最后一块，更新进度
+              if (data.done && data.progress !== null && data.progress !== undefined) {
+                setAiProgress((prev) => Math.max(prev, data.progress));
+              }
+            } catch (e) {
+              console.error('Failed to parse chunk:', e);
+            }
+          }
+        }
       }
-
-      setMessages((prev) => [
-        ...prev,
-        {
-          role: 'assistant',
-          content: data.response,
-        },
-      ]);
-    } catch (error) {
-      console.error('Failed to send message:', error);
-      setMessages((prev) => [
-        ...prev,
-        {
-          role: 'assistant',
-          content: 'Sorry, I encountered an error. Please try again.',
-        },
-      ]);
+    } catch (error: unknown) {
+      if (error instanceof Error && error.name === 'AbortError') {
+        console.log('Request was aborted');
+      } else {
+        console.error('Failed to send message:', error);
+        setMessages((prev) => [
+          ...prev,
+          {
+            role: 'assistant',
+            content: 'Sorry, I encountered an error. Please try again.',
+          },
+        ]);
+      }
     } finally {
+      setLoading(false);
+      abortControllerRef.current = null;
+    }
+  };
+
+  const handleStopGeneration = () => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
       setLoading(false);
     }
   };
@@ -313,13 +419,29 @@ export function ChatInterface({ word, existingCard, onGenerateCard, onBack }: Ch
             disabled={loading || generating}
             className="h-10 flex-1 rounded-md border-border bg-transparent text-sm focus-visible:ring-1 focus-visible:ring-ring"
           />
-          <button
-            onClick={handleSendMessage}
-            disabled={!input.trim() || loading || generating}
-            className="flex h-10 w-10 items-center justify-center rounded-md border border-border text-foreground transition-colors hover:bg-muted disabled:opacity-40"
-          >
-            <Send strokeWidth={1.5} className="h-4 w-4" />
-          </button>
+          {loading ? (
+            <button
+              onClick={handleStopGeneration}
+              className="flex h-10 w-10 items-center justify-center rounded-md border border-destructive text-destructive transition-colors hover:bg-destructive hover:text-destructive-foreground"
+              title="Stop generation"
+            >
+              <svg
+                className="h-4 w-4"
+                fill="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <rect x="6" y="6" width="12" height="12" />
+              </svg>
+            </button>
+          ) : (
+            <button
+              onClick={handleSendMessage}
+              disabled={!input.trim() || loading || generating}
+              className="flex h-10 w-10 items-center justify-center rounded-md border border-border text-foreground transition-colors hover:bg-muted disabled:opacity-40"
+            >
+              <Send strokeWidth={1.5} className="h-4 w-4" />
+            </button>
+          )}
         </div>
 
         {/* 生成卡片按钮 */}

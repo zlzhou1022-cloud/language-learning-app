@@ -4,7 +4,8 @@
     "loading": "Loading...",
     "error": "Error",
     "success": "Success",
-    "back": "Back"
+    "back": "Back",
+    "cancel": "Cancel"
   },
   "auth": {
     "login": "Login",
@@ -36,7 +37,9 @@
     "totalWords": "Total Words",
     "recentWords": "Recent Words",
     "noWords": "No words yet. Start adding vocabulary!",
-    "addWord": "Add Word"
+    "addWord": "Add Word",
+    "todayReviewed": "Reviewed Today",
+    "todayLearned": "Learned Today"
   },
   "navigation": {
     "dashboard": "Dashboard",
@@ -89,6 +92,7 @@
     "learningNotes": "Learning Notes",
     "learningNotesPlaceholder": "Key points, confusions, usage scenarios from the conversation...",
     "learningNotesHint": "Briefly record key points learned in the conversation to help recall later",
+    "learningNotesHintEfficient": "Record key learning points about this word to help recall later",
     "mnemonics": "Mnemonics",
     "examples": "Examples",
     "exampleSentence": "Sentence",
@@ -98,6 +102,10 @@
     "cardSaved": "Card saved successfully",
     "saveFailed": "Failed to save card",
     "generating": "Generating...",
-    "typeMessage": "Type your question..."
+    "typeMessage": "Type your question...",
+    "modeDeep": "Deep Mode",
+    "modeEfficient": "Efficient Mode",
+    "modeDeepDesc": "Learn deeply through AI conversation",
+    "modeEfficientDesc": "Generate card quickly"
   }
 }

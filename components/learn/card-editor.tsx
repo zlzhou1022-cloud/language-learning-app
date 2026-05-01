@@ -11,9 +11,10 @@ interface CardEditorProps {
   card: DictionaryCard;
   onSave: (card: DictionaryCard) => Promise<void>;
   onBack: () => void;
+  mode?: 'deep' | 'efficient'; // 学习模式
 }
 
-export function CardEditor({ card: initialCard, onSave, onBack }: CardEditorProps) {
+export function CardEditor({ card: initialCard, onSave, onBack, mode = 'deep' }: CardEditorProps) {
   const t = useTranslations('learn');
   const tCommon = useTranslations('common');
 
@@ -153,7 +154,7 @@ export function CardEditor({ card: initialCard, onSave, onBack }: CardEditorProp
               className="w-full rounded-md border border-border bg-transparent px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
             />
             <p className="text-xs text-muted-foreground">
-              {t('learningNotesHint')}
+              {mode === 'efficient' ? t('learningNotesHintEfficient') : t('learningNotesHint')}
             </p>
           </div>
 

@@ -69,7 +69,9 @@ export class GeminiProvider implements LLMProvider {
         contents,
         generationConfig: {
           temperature: 0.7,
-          maxOutputTokens: 2048, // 增加到 2048
+          maxOutputTokens: 2048,
+          topP: 0.95, // 添加topP以提高生成质量
+          topK: 40, // 添加topK以加快生成速度
         },
       }),
     });

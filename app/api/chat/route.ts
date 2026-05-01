@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { getGeminiProvider } from '@/lib/llm/geminiProvider';
 import type { ChatMessage } from '@/lib/llm/baseProvider';
 
@@ -10,9 +10,9 @@ export async function POST(request: NextRequest) {
     };
 
     if (!messages || !Array.isArray(messages)) {
-      return NextResponse.json(
-        { error: 'Invalid messages format' },
-        { status: 400 }
+      return new Response(
+        JSON.stringify({ error: 'Invalid messages format' }),
+        { status: 400, headers: { 'Content-Type': 'application/json' } }
       );
     }
 
@@ -38,15 +38,42 @@ export async function POST(request: NextRequest) {
       progress = Math.max(0, Math.min(100, progress));
     }
 
-    return NextResponse.json({ 
-      response: cleanResponse,
-      progress: progress 
+    // 创建流式响应
+    const encoder = new TextEncoder();
+    const stream = new ReadableStream({
+      async start(controller) {
+        // 逐字发送响应
+        const words = cleanResponse.split('');
+        
+        for (let i = 0; i < words.length; i++) {
+          const chunk = {
+            content: words[i],
+            progress: i === words.length - 1 ? progress : null, // 只在最后发送进度
+            done: i === words.length - 1
+          };
+          
+          controller.enqueue(encoder.encode(JSON.stringify(chunk) + '\n'));
+          
+          // 添加小延迟以实现打字效果
+          await new Promise(resolve => setTimeout(resolve, 20));
+        }
+        
+        controller.close();
+      }
+    });
+
+    return new Response(stream, {
+      headers: {
+        'Content-Type': 'text/event-stream',
+        'Cache-Control': 'no-cache',
+        'Connection': 'keep-alive',
+      },
     });
   } catch (error) {
     console.error('Chat API error:', error);
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : 'Internal server error' },
-      { status: 500 }
+    return new Response(
+      JSON.stringify({ error: error instanceof Error ? error.message : 'Internal server error' }),
+      { status: 500, headers: { 'Content-Type': 'application/json' } }
     );
   }
 }
