@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useTranslations } from 'next-intl';
 import { useRouter } from '@/i18n/routing';
 import { Input } from '@/components/ui/input';
@@ -18,8 +18,9 @@ export function SettingsForm() {
   const router = useRouter();
   const { profile, fetchProfile, updateNickname } = useUserStore();
 
+  // 使用 ref 跟踪是否已经初始化
+  const initializedRef = useRef(false);
   const [nickname, setNickname] = useState('');
-  const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   
@@ -34,12 +35,13 @@ export function SettingsForm() {
     fetchProfile();
   }, [fetchProfile]);
 
-  // 同步昵称到本地状态
+  // 同步昵称到本地状态 - 只在首次加载时同步
   useEffect(() => {
-    if (profile) {
+    if (profile?.nickname !== undefined && !initializedRef.current) {
       setNickname(profile.nickname || '');
+      initializedRef.current = true;
     }
-  }, [profile]);
+  }, [profile?.nickname]);
 
   const handleUpdateNickname = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -88,7 +90,6 @@ export function SettingsForm() {
       if (error) throw error;
 
       setPasswordMessage({ type: 'success', text: t('passwordUpdated') });
-      setCurrentPassword('');
       setNewPassword('');
       setConfirmPassword('');
     } catch (error) {

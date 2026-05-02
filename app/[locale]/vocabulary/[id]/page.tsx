@@ -1,5 +1,5 @@
 import { createClient } from '@/lib/supabase/server';
-import { getTranslations, setRequestLocale } from 'next-intl/server';
+import { setRequestLocale } from 'next-intl/server';
 import { notFound } from 'next/navigation';
 import { VocabularyDetail } from '@/components/vocabulary/vocabulary-detail';
 

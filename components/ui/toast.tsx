@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { X } from 'lucide-react';
 
 export interface ToastProps {
@@ -14,6 +14,14 @@ export function Toast({ message, type = 'error', duration = 3000, onClose }: Toa
   const [isVisible, setIsVisible] = useState(false);
   const [isLeaving, setIsLeaving] = useState(false);
 
+  const handleClose = useCallback(() => {
+    setIsLeaving(true);
+    setTimeout(() => {
+      setIsVisible(false);
+      onClose?.();
+    }, 300); // 与动画时长匹配
+  }, [onClose]);
+
   useEffect(() => {
     // 进入动画
     requestAnimationFrame(() => {
@@ -26,15 +34,7 @@ export function Toast({ message, type = 'error', duration = 3000, onClose }: Toa
     }, duration);
 
     return () => clearTimeout(timer);
-  }, [duration]);
-
-  const handleClose = () => {
-    setIsLeaving(true);
-    setTimeout(() => {
-      setIsVisible(false);
-      onClose?.();
-    }, 300); // 与动画时长匹配
-  };
+  }, [duration, handleClose]);
 
   const bgColor = {
     error: 'bg-destructive/10 border-destructive/20',

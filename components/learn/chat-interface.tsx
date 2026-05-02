@@ -68,10 +68,10 @@ export function ChatInterface({ word, existingCard, onGenerateCard, onBack, save
         let userMessage: ChatMessage;
         
         if (existingCard && continueMode) {
-          // 继续学习模式：使用新的 prompt
+          // 继续学习模式：使用新的 prompt，传递 aiStyle
           userMessage = {
             role: 'user',
-            content: CONTINUE_LEARNING_PROMPT(existingCard),
+            content: CONTINUE_LEARNING_PROMPT(existingCard, aiStyle),
           };
         } else if (existingCard) {
           // 普通继续对话
@@ -92,7 +92,7 @@ export function ChatInterface({ word, existingCard, onGenerateCard, onBack, save
             content: INITIAL_WORD_PROMPT(
               word,
               languageMap[locale] || 'English',
-              'English'
+              aiStyle
             ),
           };
         }

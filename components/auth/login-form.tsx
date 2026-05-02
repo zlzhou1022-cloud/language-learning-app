@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
 import { Input } from '@/components/ui/input';
 import { createClient } from '@/lib/supabase/client';
@@ -32,14 +32,8 @@ export function LoginForm({ initialMessage }: { initialMessage?: string }) {
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   
   // 用于控制 URL 错误信息的显示
-  const [showUrlError, setShowUrlError] = useState(false);
-
   // 在组件挂载时检查是否有 URL 错误信息
-  useEffect(() => {
-    if (initialMessage === 'link_expired') {
-      setShowUrlError(true);
-    }
-  }, [initialMessage]);
+  const [showUrlError, setShowUrlError] = useState(initialMessage === 'link_expired');
 
   const handleMagicLink = async (e: React.FormEvent) => {
     e.preventDefault();

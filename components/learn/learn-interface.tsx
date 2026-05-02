@@ -41,6 +41,8 @@ export function LearnInterface({ initialWord, wordId, editMode }: LearnInterface
   const [word, setWord] = useState(initialWord || '');
   const [generatedCard, setGeneratedCard] = useState<DictionaryCard | null>(null);
   const [existingCard, setExistingCard] = useState<DictionaryCard | null>(null);
+  const [isExistingWord, setIsExistingWord] = useState(false); // 标记是否是重复单词
+  const [existingWordId, setExistingWordId] = useState<string | null>(null); // 保存重复单词的 ID
   const [savedMessages, setSavedMessages] = useState<ChatMessage[]>([]); // 保存的对话历史
   const [savedProgress, setSavedProgress] = useState<number>(0); // 保存的进度
   const [loading, setLoading] = useState(false); // 效率模式加载状态
@@ -109,6 +111,69 @@ export function LearnInterface({ initialWord, wordId, editMode }: LearnInterface
   const handleStartLearning = async () => {
     if (!word.trim()) return;
 
+    // 检查单词是否已存在
+    try {
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        alert('请先登录');
+        return;
+      }
+
+      // 查询是否已存在该单词
+      const { data: existingWords, error } = await supabase
+        .from('dictionaries')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('word', word.trim())
+        .limit(1);
+
+      if (error) {
+        console.error('Failed to check existing word:', error);
+        // 如果查询失败，继续正常流程
+      }
+
+      // 如果单词已存在
+      if (existingWords && existingWords.length > 0) {
+        const existingWord = existingWords[0];
+        
+        // 转换数据库类型到DictionaryCard类型
+        const card: DictionaryCard = {
+          word: existingWord.word,
+          phonetic: existingWord.phonetic || '',
+          definition_native: existingWord.definition_native || '',
+          definition_target: existingWord.definition_target || '',
+          learning_notes: existingWord.learning_notes || '',
+          mnemonics: existingWord.mnemonics || '',
+          language: existingWord.language || 'en',
+          examples: Array.isArray(existingWord.examples) 
+            ? (existingWord.examples as Array<{ sentence: string; translation: string }>)
+            : [],
+        };
+
+        setExistingCard(card);
+        setIsExistingWord(true); // 标记为重复单词
+        setExistingWordId(existingWord.id); // 保存单词 ID
+
+        if (mode === 'deep') {
+          // 钻研模式：直接进入继续学习对话（使用已选择的 aiStyle）
+          setStage('chat');
+        } else {
+          // 效率模式：直接显示卡片编辑页面
+          setGeneratedCard(card);
+          setStage('edit');
+        }
+        return;
+      }
+    } catch (error) {
+      console.error('Error checking for existing word:', error);
+      // 如果出错，继续正常流程
+    }
+
+    // 单词不存在，继续正常流程
+    setIsExistingWord(false); // 标记为新单词
+    setExistingWordId(null); // 清空单词 ID
     if (mode === 'deep') {
       // 钻研模式：直接进入对话（已经在首页选择了风格）
       setStage('chat');
@@ -150,7 +215,7 @@ export function LearnInterface({ initialWord, wordId, editMode }: LearnInterface
   "word": "${word}",
   "phonetic": "IPA音标",
   "definition_native": "${languageMap[locale]}释义（简洁，50字以内）",
-  "definition_target": "English释义（简洁，50字以内）",
+  "definition_target": "单词本身语言的释义（简洁，50字以内）",
   "learning_notes": "关键学习点（50-80字）",
   "mnemonics": "助记法（30字以内）",
   "language": "单词的语言代码（en=英语, ja=日语, zh=中文）",
@@ -160,7 +225,10 @@ export function LearnInterface({ initialWord, wordId, editMode }: LearnInterface
   ]
 }
 
-重要：language字段必须根据单词本身的语言判断，不是用户界面语言。
+重要说明：
+1. language字段必须根据单词本身的语言判断，不是用户界面语言
+2. definition_native：用户母语（${languageMap[locale]}）的释义
+3. definition_target：单词本身语言的释义（例如：英语单词提供英语释义，日语单词提供日语释义）
 只输出JSON，不要其他文字。`,
         };
 
@@ -241,15 +309,25 @@ export function LearnInterface({ initialWord, wordId, editMode }: LearnInterface
 
       if (!user) throw new Error('Not authenticated');
 
-      // 如果是继续学习模式（有 wordId 且 editMode === 'continue'），只更新学习要点和助记方法
-      if (wordId && editMode === 'continue') {
+      // 判断是否只更新学习要点和助记方法
+      // 1. 从词汇详情页继续学习（editMode === 'continue'）
+      // 2. 钻研模式下的重复单词（isExistingWord && mode === 'deep'）
+      const shouldUpdateNotesOnly = 
+        (wordId && editMode === 'continue') || 
+        (isExistingWord && mode === 'deep');
+
+      if (shouldUpdateNotesOnly) {
+        // 只更新学习要点和助记方法
+        const updateId = wordId || existingWordId;
+        if (!updateId) throw new Error('No word ID found');
+
         const { error } = await supabase
           .from('dictionaries')
           .update({
             learning_notes: card.learning_notes,
             mnemonics: card.mnemonics,
           })
-          .eq('id', wordId);
+          .eq('id', updateId);
 
         if (error) throw error;
       } else {
@@ -268,12 +346,13 @@ export function LearnInterface({ initialWord, wordId, editMode }: LearnInterface
           proficiency_level: 0,
         };
 
-        if (wordId) {
-          // 更新已有卡片
+        const updateId = wordId || existingWordId;
+        if (updateId) {
+          // 更新已有卡片（效率模式下的重复单词）
           const { error } = await supabase
             .from('dictionaries')
             .update(cardData)
-            .eq('id', wordId);
+            .eq('id', updateId);
 
           if (error) throw error;
         } else {
@@ -298,6 +377,9 @@ export function LearnInterface({ initialWord, wordId, editMode }: LearnInterface
     setStage('input');
     setWord('');
     setGeneratedCard(null);
+    setExistingCard(null); // 清空已有卡片
+    setIsExistingWord(false); // 重置重复标记
+    setExistingWordId(null); // 清空单词 ID
     setSavedMessages([]); // 清空保存的对话
     setSavedProgress(0);
     // 不重置mode，保持用户的选择
@@ -446,6 +528,7 @@ export function LearnInterface({ initialWord, wordId, editMode }: LearnInterface
       {/* Stage 2: 对话界面 */}
       {stage === 'chat' && (
         <ChatInterface
+          key={`${word}-${isExistingWord ? 'existing' : 'new'}`} // 添加 key 强制重新初始化
           word={word}
           existingCard={existingCard}
           onGenerateCard={handleGenerateCard}
@@ -453,7 +536,7 @@ export function LearnInterface({ initialWord, wordId, editMode }: LearnInterface
           savedMessages={savedMessages}
           savedProgress={savedProgress}
           onMessagesChange={handleMessagesChange}
-          continueMode={editMode === 'continue'}
+          continueMode={editMode === 'continue' || isExistingWord}
           aiStyle={aiStyle}
         />
       )}
@@ -465,7 +548,7 @@ export function LearnInterface({ initialWord, wordId, editMode }: LearnInterface
           onSave={handleSaveCard}
           onBack={handleBackFromEdit}
           mode={mode}
-          originalCard={editMode === 'continue' ? existingCard || undefined : undefined}
+          originalCard={(editMode === 'continue' || (isExistingWord && mode === 'deep')) ? existingCard || undefined : undefined}
         />
       )}
 

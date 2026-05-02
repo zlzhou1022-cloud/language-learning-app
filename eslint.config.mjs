@@ -12,6 +12,9 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Test scripts
+    "list-gemini-models.js",
+    "test-gemini-api.js",
   ]),
 ]);
 
