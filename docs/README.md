@@ -1,7 +1,7 @@
 # 项目文档索引
 
-**最后更新**: 2026-05-02  
-**版本**: 2.0.4
+**最后更新**: 2026-05-03  
+**版本**: 2.0.5
 
 ---
 
@@ -40,6 +40,9 @@
 ### 数据和卡片
 - **[FIX_CARD_GENERATION_ERROR.md](FIX_CARD_GENERATION_ERROR.md)** - 卡片生成错误修复
 - **[LEARN_FEATURE.md](LEARN_FEATURE.md)** - 学习功能说明
+- **[LANGUAGE_FIELD_UPDATE.md](LANGUAGE_FIELD_UPDATE.md)** - 单词语言字段更新
+- **[VOCABULARY_DETAIL_IMPROVEMENTS.md](VOCABULARY_DETAIL_IMPROVEMENTS.md)** - 词汇详情页改进
+- **[HIGHLIGHT_IMPROVEMENTS.md](HIGHLIGHT_IMPROVEMENTS.md)** - 高亮显示功能改进
 
 ---
 
@@ -59,6 +62,7 @@
 ## 📋 任务完成报告
 
 ### 最近完成的任务
+- **[TASK_14_TAGS_COMPLETE.md](TASK_14_TAGS_COMPLETE.md)** - 词汇标签功能
 - **[TASK_12_COMPLETE.md](TASK_12_COMPLETE.md)** - 翻译修复和移动端优化
 - **[TASK_11_COMPLETE.md](TASK_11_COMPLETE.md)** - 学习焦点引导
 - **[TASK_10_COMPLETE.md](TASK_10_COMPLETE.md)** - AI进度评估修复

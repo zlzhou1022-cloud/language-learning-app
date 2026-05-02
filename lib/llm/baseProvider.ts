@@ -19,6 +19,7 @@ export interface DictionaryCard {
     sentence: string;
     translation: string;
   }>;
+  language: string; // 单词本身的语言 (en/ja/zh)
 }
 
 export interface LLMProvider {

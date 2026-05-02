@@ -53,6 +53,7 @@ export type Database = {
           mnemonics: string | null
           phonetic: string | null
           proficiency_level: number | null
+          tags: string[] | null
           updated_at: string
           user_id: string
           word: string
@@ -70,6 +71,7 @@ export type Database = {
           mnemonics?: string | null
           phonetic?: string | null
           proficiency_level?: number | null
+          tags?: string[] | null
           updated_at?: string
           user_id: string
           word: string
@@ -87,6 +89,7 @@ export type Database = {
           mnemonics?: string | null
           phonetic?: string | null
           proficiency_level?: number | null
+          tags?: string[] | null
           updated_at?: string
           user_id?: string
           word?: string

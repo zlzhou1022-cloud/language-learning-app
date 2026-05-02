@@ -12,14 +12,89 @@ interface CardEditorProps {
   onSave: (card: DictionaryCard) => Promise<void>;
   onBack: () => void;
   mode?: 'deep' | 'efficient'; // 学习模式
+  originalCard?: DictionaryCard; // 原始卡片（用于高亮新增内容）
 }
 
-export function CardEditor({ card: initialCard, onSave, onBack, mode = 'deep' }: CardEditorProps) {
+export function CardEditor({ card: initialCard, onSave, onBack, mode = 'deep', originalCard }: CardEditorProps) {
   const t = useTranslations('learn');
   const tCommon = useTranslations('common');
 
   const [card, setCard] = useState<DictionaryCard>(initialCard);
   const [saving, setSaving] = useState(false);
+
+  // 在初始加载时计算哪些字段有变化和新增内容（避免输入时重新计算）
+  const [changedFields] = useState(() => {
+    if (!originalCard) {
+      console.log('[CardEditor] No originalCard, skipping highlight');
+      return {};
+    }
+    
+    console.log('[CardEditor] Calculating changed fields');
+    console.log('[CardEditor] originalCard:', originalCard);
+    console.log('[CardEditor] initialCard:', initialCard);
+    
+    const changes: Record<string, { hasChanged: boolean; newContent: string; originalContent: string }> = {};
+    
+    // 检查所有文本字段
+    const textFields: Array<keyof DictionaryCard> = [
+      'phonetic',
+      'definition_native', 
+      'definition_target',
+      'learning_notes',
+      'mnemonics'
+    ];
+    
+    textFields.forEach(field => {
+      const original = String(originalCard[field] || '');
+      const current = String(initialCard[field] || '');
+      
+      console.log(`[CardEditor] Field ${field}:`, {
+        original: original.substring(0, 50),
+        current: current.substring(0, 50),
+        different: current !== original,
+        includes: current.includes(original),
+        longer: current.length > original.length
+      });
+      
+      if (current !== original && current.includes(original) && current.length > original.length) {
+        // 尝试提取新增内容
+        let newContent = '';
+        
+        if (current.startsWith(original)) {
+          // 新内容在后面
+          newContent = current.substring(original.length).trim();
+        } else if (current.endsWith(original)) {
+          // 新内容在前面
+          newContent = current.substring(0, current.length - original.length).trim();
+        } else {
+          // 新内容在中间，尝试找到分隔符
+          const parts = current.split(original);
+          if (parts.length === 2) {
+            newContent = (parts[0] + parts[1]).trim();
+          }
+        }
+        
+        if (newContent) {
+          console.log(`[CardEditor] Field ${field} has changes:`, {
+            originalLength: original.length,
+            currentLength: current.length,
+            newContentLength: newContent.length,
+            newContent: newContent.substring(0, 50)
+          });
+          
+          changes[field] = {
+            hasChanged: true,
+            newContent,
+            originalContent: original
+          };
+        }
+      }
+    });
+    
+    console.log('[CardEditor] Final changes:', Object.keys(changes));
+    return changes;
+  });
+
   const [error, setError] = useState<string | null>(null);
 
   const handleSave = async () => {
@@ -59,6 +134,81 @@ export function CardEditor({ card: initialCard, onSave, onBack, mode = 'deep' }:
       [field]: value,
     };
     setCard({ ...card, examples: newExamples });
+  };
+
+  // 渲染带高亮的输入框
+  const renderHighlightedInput = (
+    field: keyof DictionaryCard,
+    value: string,
+    onChange: (value: string) => void,
+    isTextarea: boolean = false,
+    rows: number = 3,
+    placeholder?: string
+  ) => {
+    const change = changedFields[field];
+    
+    if (!change?.hasChanged) {
+      // 没有变化，正常显示
+      if (isTextarea) {
+        return (
+          <textarea
+            value={value}
+            onChange={(e) => onChange(e.target.value)}
+            rows={rows}
+            placeholder={placeholder}
+            className="w-full rounded-md border border-border bg-transparent px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+          />
+        );
+      }
+      return (
+        <Input
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder={placeholder}
+          className="h-10"
+        />
+      );
+    }
+
+    // 有变化，显示高亮
+    return (
+      <div className="space-y-2">
+        {/* 原始内容 */}
+        {change.originalContent && (
+          <div className="rounded-md border border-border bg-muted/50 px-3 py-2 text-sm text-muted-foreground">
+            {change.originalContent}
+          </div>
+        )}
+        
+        {/* 新增内容 - 高亮显示 */}
+        {change.newContent && (
+          <div className="rounded-md border-2 border-green-500/50 bg-green-500/10 px-3 py-2 text-sm">
+            <div className="mb-1 text-xs font-medium text-green-600 dark:text-green-400">
+              ✨ 新增内容
+            </div>
+            {change.newContent}
+          </div>
+        )}
+        
+        {/* 可编辑的完整内容 */}
+        {isTextarea ? (
+          <textarea
+            value={value}
+            onChange={(e) => onChange(e.target.value)}
+            rows={rows}
+            placeholder={placeholder}
+            className="w-full rounded-md border border-border bg-transparent px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+          />
+        ) : (
+          <Input
+            value={value}
+            onChange={(e) => onChange(e.target.value)}
+            placeholder={placeholder}
+            className="h-10"
+          />
+        )}
+      </div>
+    );
   };
 
   return (
@@ -103,13 +253,12 @@ export function CardEditor({ card: initialCard, onSave, onBack, mode = 'deep' }:
             <Label htmlFor="phonetic" className="text-xs font-medium uppercase tracking-widest text-muted-foreground">
               {t('phonetic')}
             </Label>
-            <Input
-              id="phonetic"
-              type="text"
-              value={card.phonetic}
-              onChange={(e) => setCard({ ...card, phonetic: e.target.value })}
-              className="h-10 rounded-md border-border bg-transparent text-sm focus-visible:ring-1 focus-visible:ring-ring"
-            />
+            {renderHighlightedInput(
+              'phonetic',
+              card.phonetic,
+              (value) => setCard({ ...card, phonetic: value }),
+              false
+            )}
           </div>
 
           {/* 母语释义 */}
@@ -117,13 +266,13 @@ export function CardEditor({ card: initialCard, onSave, onBack, mode = 'deep' }:
             <Label htmlFor="definition-native" className="text-xs font-medium uppercase tracking-widest text-muted-foreground">
               {t('definitionNative')}
             </Label>
-            <textarea
-              id="definition-native"
-              value={card.definition_native}
-              onChange={(e) => setCard({ ...card, definition_native: e.target.value })}
-              rows={3}
-              className="w-full rounded-md border border-border bg-transparent px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-            />
+            {renderHighlightedInput(
+              'definition_native',
+              card.definition_native,
+              (value) => setCard({ ...card, definition_native: value }),
+              true,
+              3
+            )}
           </div>
 
           {/* 目标语释义 */}
@@ -131,13 +280,13 @@ export function CardEditor({ card: initialCard, onSave, onBack, mode = 'deep' }:
             <Label htmlFor="definition-target" className="text-xs font-medium uppercase tracking-widest text-muted-foreground">
               {t('definitionTarget')}
             </Label>
-            <textarea
-              id="definition-target"
-              value={card.definition_target}
-              onChange={(e) => setCard({ ...card, definition_target: e.target.value })}
-              rows={3}
-              className="w-full rounded-md border border-border bg-transparent px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-            />
+            {renderHighlightedInput(
+              'definition_target',
+              card.definition_target,
+              (value) => setCard({ ...card, definition_target: value }),
+              true,
+              3
+            )}
           </div>
 
           {/* 学习要点 */}
@@ -145,14 +294,14 @@ export function CardEditor({ card: initialCard, onSave, onBack, mode = 'deep' }:
             <Label htmlFor="learning-notes" className="text-xs font-medium uppercase tracking-widest text-muted-foreground">
               {t('learningNotes')}
             </Label>
-            <textarea
-              id="learning-notes"
-              value={card.learning_notes}
-              onChange={(e) => setCard({ ...card, learning_notes: e.target.value })}
-              rows={3}
-              placeholder={t('learningNotesPlaceholder')}
-              className="w-full rounded-md border border-border bg-transparent px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-            />
+            {renderHighlightedInput(
+              'learning_notes',
+              card.learning_notes,
+              (value) => setCard({ ...card, learning_notes: value }),
+              true,
+              3,
+              t('learningNotesPlaceholder')
+            )}
             <p className="text-xs text-muted-foreground">
               {mode === 'efficient' ? t('learningNotesHintEfficient') : t('learningNotesHint')}
             </p>
@@ -163,13 +312,13 @@ export function CardEditor({ card: initialCard, onSave, onBack, mode = 'deep' }:
             <Label htmlFor="mnemonics" className="text-xs font-medium uppercase tracking-widest text-muted-foreground">
               {t('mnemonics')}
             </Label>
-            <textarea
-              id="mnemonics"
-              value={card.mnemonics}
-              onChange={(e) => setCard({ ...card, mnemonics: e.target.value })}
-              rows={2}
-              className="w-full rounded-md border border-border bg-transparent px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-            />
+            {renderHighlightedInput(
+              'mnemonics',
+              card.mnemonics,
+              (value) => setCard({ ...card, mnemonics: value }),
+              true,
+              2
+            )}
           </div>
 
           {/* 例句 */}

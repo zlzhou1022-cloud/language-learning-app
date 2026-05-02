@@ -12,12 +12,14 @@ import type { DictionaryCard, ChatMessage } from '@/lib/llm/baseProvider';
 interface LearnInterfaceProps {
   initialWord?: string;
   wordId?: string;
+  editMode?: 'continue' | 'edit'; // 编辑模式：continue=继续学习对话，edit=直接编辑卡片
 }
 
 type Stage = 'input' | 'chat' | 'edit';
 type LearningMode = 'deep' | 'efficient';
+type AIStyle = 'academic' | 'casual' | 'mnemonic';
 
-export function LearnInterface({ initialWord, wordId }: LearnInterfaceProps) {
+export function LearnInterface({ initialWord, wordId, editMode }: LearnInterfaceProps) {
   const t = useTranslations('learn');
   const tCommon = useTranslations('common');
   const locale = useLocale();
@@ -30,6 +32,10 @@ export function LearnInterface({ initialWord, wordId }: LearnInterfaceProps) {
     }
     return 'deep';
   });
+
+  // AI 风格选择
+  const [aiStyle, setAiStyle] = useState<AIStyle>('academic');
+  const [showAiStyleModal, setShowAiStyleModal] = useState(false);
   
   const [stage, setStage] = useState<Stage>('input');
   const [word, setWord] = useState(initialWord || '');
@@ -71,6 +77,7 @@ export function LearnInterface({ initialWord, wordId }: LearnInterfaceProps) {
           definition_target: data.definition_target || '',
           learning_notes: data.learning_notes || '',
           mnemonics: data.mnemonics || '',
+          language: data.language || 'en', // 默认英语
           examples: Array.isArray(data.examples) 
             ? (data.examples as Array<{ sentence: string; translation: string }>)
             : [],
@@ -78,26 +85,38 @@ export function LearnInterface({ initialWord, wordId }: LearnInterfaceProps) {
 
         setExistingCard(card);
         setWord(data.word);
-        setStage('chat'); // 直接进入对话模式
+        
+        // 根据 editMode 决定进入哪个阶段
+        if (editMode === 'edit') {
+          // 直接编辑模式：进入卡片编辑界面
+          setGeneratedCard(card);
+          setStage('edit');
+        } else if (editMode === 'continue') {
+          // 继续学习模式：显示 AI 风格选择弹窗
+          setShowAiStyleModal(true);
+        } else {
+          // 默认：进入对话模式
+          setStage('chat');
+        }
       } catch (error) {
         console.error('Failed to load card:', error);
       }
     };
     
     loadCard();
-  }, [wordId]);
+  }, [wordId, editMode]);
 
   const handleStartLearning = async () => {
     if (!word.trim()) return;
 
     if (mode === 'deep') {
-      // 钻研模式：进入AI对话
+      // 钻研模式：直接进入对话（已经在首页选择了风格）
       setStage('chat');
     } else {
       // 效率模式：直接生成卡片
       setLoading(true);
       setLoadingProgress(0);
-      
+
       // 创建 AbortController
       abortControllerRef.current = new AbortController();
       
@@ -134,12 +153,14 @@ export function LearnInterface({ initialWord, wordId }: LearnInterfaceProps) {
   "definition_target": "English释义（简洁，50字以内）",
   "learning_notes": "关键学习点（50-80字）",
   "mnemonics": "助记法（30字以内）",
+  "language": "单词的语言代码（en=英语, ja=日语, zh=中文）",
   "examples": [
     {"sentence": "例句1", "translation": "${languageMap[locale]}翻译"},
     {"sentence": "例句2", "translation": "${languageMap[locale]}翻译"}
   ]
 }
 
+重要：language字段必须根据单词本身的语言判断，不是用户界面语言。
 只输出JSON，不要其他文字。`,
         };
 
@@ -190,6 +211,11 @@ export function LearnInterface({ initialWord, wordId }: LearnInterfaceProps) {
     }
   };
 
+  const handleConfirmAiStyle = () => {
+    setShowAiStyleModal(false);
+    setStage('chat');
+  };
+
   const handleCancelGeneration = () => {
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
@@ -215,35 +241,49 @@ export function LearnInterface({ initialWord, wordId }: LearnInterfaceProps) {
 
       if (!user) throw new Error('Not authenticated');
 
-      const cardData = {
-        user_id: user.id,
-        word: card.word,
-        language: locale,
-        phonetic: card.phonetic,
-        definition_native: card.definition_native,
-        definition_target: card.definition_target,
-        learning_notes: card.learning_notes,
-        mnemonics: card.mnemonics,
-        examples: card.examples,
-        definition_json: {}, // 保持兼容性
-        proficiency_level: 0,
-      };
-
-      if (wordId) {
-        // 更新已有卡片
+      // 如果是继续学习模式（有 wordId 且 editMode === 'continue'），只更新学习要点和助记方法
+      if (wordId && editMode === 'continue') {
         const { error } = await supabase
           .from('dictionaries')
-          .update(cardData)
+          .update({
+            learning_notes: card.learning_notes,
+            mnemonics: card.mnemonics,
+          })
           .eq('id', wordId);
 
         if (error) throw error;
       } else {
-        // 创建新卡片
-        const { error } = await supabase
-          .from('dictionaries')
-          .insert(cardData);
+        // 完整保存或更新
+        const cardData = {
+          user_id: user.id,
+          word: card.word,
+          language: card.language, // 使用单词本身的语言
+          phonetic: card.phonetic,
+          definition_native: card.definition_native,
+          definition_target: card.definition_target,
+          learning_notes: card.learning_notes,
+          mnemonics: card.mnemonics,
+          examples: card.examples,
+          definition_json: {}, // 保持兼容性
+          proficiency_level: 0,
+        };
 
-        if (error) throw error;
+        if (wordId) {
+          // 更新已有卡片
+          const { error } = await supabase
+            .from('dictionaries')
+            .update(cardData)
+            .eq('id', wordId);
+
+          if (error) throw error;
+        } else {
+          // 创建新卡片
+          const { error } = await supabase
+            .from('dictionaries')
+            .insert(cardData);
+
+          if (error) throw error;
+        }
       }
 
       // 保存成功，返回词汇页面
@@ -280,16 +320,9 @@ export function LearnInterface({ initialWord, wordId }: LearnInterfaceProps) {
   return (
     <div className="space-y-8">
       {/* 页头 */}
-      <div className="space-y-1">
-        <h1 className="text-2xl font-semibold tracking-tight text-foreground">
-          {t('title')}
-        </h1>
-        {stage === 'input' && (
-          <p className="text-sm leading-relaxed text-muted-foreground">
-            {t('inputWord')}
-          </p>
-        )}
-      </div>
+      <h1 className="text-2xl font-semibold tracking-tight text-foreground">
+        {t('title')}
+      </h1>
 
       {/* Stage 1: 单词输入 */}
       {stage === 'input' && (
@@ -297,7 +330,7 @@ export function LearnInterface({ initialWord, wordId }: LearnInterfaceProps) {
           {/* 模式切换 */}
           <div className="space-y-3">
             <label className="text-xs font-medium uppercase tracking-widest text-muted-foreground">
-              {t('inputWord')}
+              {t('modeSelection')}
             </label>
             <div className="flex gap-2 rounded-md border border-border p-1">
               <button
@@ -329,9 +362,59 @@ export function LearnInterface({ initialWord, wordId }: LearnInterfaceProps) {
             </div>
           </div>
 
+          {/* AI 风格选择 - 只在钻研模式下显示 */}
+          {mode === 'deep' && (
+            <div className="space-y-3">
+              <label className="text-xs font-medium uppercase tracking-widest text-muted-foreground">
+                {t('aiStyleSelection')}
+              </label>
+              <div className="grid grid-cols-3 gap-2">
+                <button
+                  onClick={() => setAiStyle('academic')}
+                  className={`rounded-md border px-3 py-3 text-sm transition-colors ${
+                    aiStyle === 'academic'
+                      ? 'border-foreground bg-foreground/5'
+                      : 'border-border hover:border-foreground/50'
+                  }`}
+                >
+                  <div className="space-y-1">
+                    <div className="font-medium">{t('aiStyleAcademic')}</div>
+                    <div className="text-xs text-muted-foreground">{t('aiStyleAcademicDesc')}</div>
+                  </div>
+                </button>
+                <button
+                  onClick={() => setAiStyle('casual')}
+                  className={`rounded-md border px-3 py-3 text-sm transition-colors ${
+                    aiStyle === 'casual'
+                      ? 'border-foreground bg-foreground/5'
+                      : 'border-border hover:border-foreground/50'
+                  }`}
+                >
+                  <div className="space-y-1">
+                    <div className="font-medium">{t('aiStyleCasual')}</div>
+                    <div className="text-xs text-muted-foreground">{t('aiStyleCasualDesc')}</div>
+                  </div>
+                </button>
+                <button
+                  onClick={() => setAiStyle('mnemonic')}
+                  className={`rounded-md border px-3 py-3 text-sm transition-colors ${
+                    aiStyle === 'mnemonic'
+                      ? 'border-foreground bg-foreground/5'
+                      : 'border-border hover:border-foreground/50'
+                  }`}
+                >
+                  <div className="space-y-1">
+                    <div className="font-medium">{t('aiStyleMnemonic')}</div>
+                    <div className="text-xs text-muted-foreground">{t('aiStyleMnemonicDesc')}</div>
+                  </div>
+                </button>
+              </div>
+            </div>
+          )}
+
           <div className="space-y-1.5">
             <label htmlFor="word-input" className="text-xs font-medium uppercase tracking-widest text-muted-foreground">
-              {t('word')}
+              {t('inputWord')}
             </label>
             <Input
               id="word-input"
@@ -370,6 +453,8 @@ export function LearnInterface({ initialWord, wordId }: LearnInterfaceProps) {
           savedMessages={savedMessages}
           savedProgress={savedProgress}
           onMessagesChange={handleMessagesChange}
+          continueMode={editMode === 'continue'}
+          aiStyle={aiStyle}
         />
       )}
 
@@ -380,7 +465,71 @@ export function LearnInterface({ initialWord, wordId }: LearnInterfaceProps) {
           onSave={handleSaveCard}
           onBack={handleBackFromEdit}
           mode={mode}
+          originalCard={editMode === 'continue' ? existingCard || undefined : undefined}
         />
+      )}
+
+      {/* AI 风格选择弹窗 */}
+      {showAiStyleModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm">
+          <div className="w-full max-w-md space-y-6 rounded-lg border border-border bg-background p-6 shadow-lg">
+            <div className="space-y-2">
+              <h2 className="text-lg font-semibold text-foreground">{t('selectAiStyle')}</h2>
+              <p className="text-sm text-muted-foreground">{t('selectAiStyleDesc')}</p>
+            </div>
+
+            <div className="space-y-3">
+              <button
+                onClick={() => setAiStyle('academic')}
+                className={`w-full rounded-md border p-4 text-left transition-colors ${
+                  aiStyle === 'academic'
+                    ? 'border-foreground bg-foreground/5'
+                    : 'border-border hover:border-foreground/50'
+                }`}
+              >
+                <div className="space-y-1">
+                  <div className="font-medium text-foreground">{t('aiStyleAcademic')}</div>
+                  <div className="text-sm text-muted-foreground">{t('aiStyleAcademicDesc')}</div>
+                </div>
+              </button>
+
+              <button
+                onClick={() => setAiStyle('casual')}
+                className={`w-full rounded-md border p-4 text-left transition-colors ${
+                  aiStyle === 'casual'
+                    ? 'border-foreground bg-foreground/5'
+                    : 'border-border hover:border-foreground/50'
+                }`}
+              >
+                <div className="space-y-1">
+                  <div className="font-medium text-foreground">{t('aiStyleCasual')}</div>
+                  <div className="text-sm text-muted-foreground">{t('aiStyleCasualDesc')}</div>
+                </div>
+              </button>
+
+              <button
+                onClick={() => setAiStyle('mnemonic')}
+                className={`w-full rounded-md border p-4 text-left transition-colors ${
+                  aiStyle === 'mnemonic'
+                    ? 'border-foreground bg-foreground/5'
+                    : 'border-border hover:border-foreground/50'
+                }`}
+              >
+                <div className="space-y-1">
+                  <div className="font-medium text-foreground">{t('aiStyleMnemonic')}</div>
+                  <div className="text-sm text-muted-foreground">{t('aiStyleMnemonicDesc')}</div>
+                </div>
+              </button>
+            </div>
+
+            <button
+              onClick={handleConfirmAiStyle}
+              className="flex h-10 w-full items-center justify-center rounded-md bg-foreground text-sm font-medium text-background transition-opacity hover:opacity-80"
+            >
+              {t('confirm')}
+            </button>
+          </div>
+        </div>
       )}
 
       {/* 效率模式加载进度 */}

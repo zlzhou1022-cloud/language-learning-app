@@ -130,6 +130,7 @@ export class GeminiProvider implements LLMProvider {
         definition_target: normalizeDefinition(rawCard.definition_target),
         learning_notes: (rawCard.learning_notes as string) || '通过对话学习了这个单词的用法和含义',
         mnemonics: (rawCard.mnemonics as string) || '',
+        language: (rawCard.language as string) || 'en', // 默认英语
         examples: Array.isArray(rawCard.examples) ? rawCard.examples : [],
       };
       

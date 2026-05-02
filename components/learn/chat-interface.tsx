@@ -7,7 +7,7 @@ import { Toast } from '@/components/ui/toast';
 import { ConversationQualityIndicator } from './conversation-quality-indicator';
 import { Send, ArrowLeft } from 'lucide-react';
 import type { ChatMessage, DictionaryCard } from '@/lib/llm/baseProvider';
-import { SYSTEM_ROLE, INITIAL_WORD_PROMPT, SUMMARIZE_CARD_PROMPT, CONTINUE_CONVERSATION_PROMPT } from '@/lib/llm/prompts';
+import { getSystemRole, INITIAL_WORD_PROMPT, SUMMARIZE_CARD_PROMPT, CONTINUE_CONVERSATION_PROMPT, CONTINUE_LEARNING_PROMPT, type AIStyle } from '@/lib/llm/prompts';
 
 interface ChatInterfaceProps {
   word: string;
@@ -17,9 +17,11 @@ interface ChatInterfaceProps {
   savedMessages?: ChatMessage[]; // 保存的对话历史
   savedProgress?: number; // 保存的进度
   onMessagesChange?: (messages: ChatMessage[], progress: number) => void; // 对话变化回调
+  continueMode?: boolean; // 是否是继续学习模式
+  aiStyle?: AIStyle; // AI 风格
 }
 
-export function ChatInterface({ word, existingCard, onGenerateCard, onBack, savedMessages, savedProgress, onMessagesChange }: ChatInterfaceProps) {
+export function ChatInterface({ word, existingCard, onGenerateCard, onBack, savedMessages, savedProgress, onMessagesChange, continueMode, aiStyle = 'academic' }: ChatInterfaceProps) {
   const t = useTranslations('learn');
   const tCommon = useTranslations('common');
   const locale = useLocale();
@@ -33,6 +35,9 @@ export function ChatInterface({ word, existingCard, onGenerateCard, onBack, save
   const initializedRef = useRef(false); // 使用 ref 跟踪初始化状态，避免触发重渲染
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const abortControllerRef = useRef<AbortController | null>(null); // 用于中止流式请求
+
+  // 根据 aiStyle 获取对应的 SYSTEM_ROLE
+  const systemRole = getSystemRole(aiStyle);
 
   // 当消息或进度变化时，通知父组件
   useEffect(() => {
@@ -57,13 +62,19 @@ export function ChatInterface({ word, existingCard, onGenerateCard, onBack, save
       try {
         const systemMessage: ChatMessage = {
           role: 'system',
-          content: SYSTEM_ROLE,
+          content: systemRole, // 使用根据 aiStyle 选择的 SYSTEM_ROLE
         };
 
         let userMessage: ChatMessage;
         
-        if (existingCard) {
-          // 继续已有卡片的对话
+        if (existingCard && continueMode) {
+          // 继续学习模式：使用新的 prompt
+          userMessage = {
+            role: 'user',
+            content: CONTINUE_LEARNING_PROMPT(existingCard),
+          };
+        } else if (existingCard) {
+          // 普通继续对话
           userMessage = {
             role: 'user',
             content: CONTINUE_CONVERSATION_PROMPT(existingCard),
@@ -166,7 +177,7 @@ export function ChatInterface({ word, existingCard, onGenerateCard, onBack, save
     };
 
     initializeChat();
-  }, [word, existingCard, locale, savedMessages]);
+  }, [word, existingCard, locale, savedMessages, continueMode, systemRole]);
 
   // 自动滚动到底部
   useEffect(() => {
@@ -188,7 +199,7 @@ export function ChatInterface({ word, existingCard, onGenerateCard, onBack, save
     try {
       const systemMessage: ChatMessage = {
         role: 'system',
-        content: SYSTEM_ROLE,
+        content: systemRole, // 使用根据 aiStyle 选择的 SYSTEM_ROLE
       };
 
       // 创建新的 AbortController
@@ -287,7 +298,7 @@ export function ChatInterface({ word, existingCard, onGenerateCard, onBack, save
     try {
       const systemMessage: ChatMessage = {
         role: 'system',
-        content: SYSTEM_ROLE,
+        content: systemRole, // 使用根据 aiStyle 选择的 SYSTEM_ROLE
       };
 
       const conversationHistory = messages
@@ -320,7 +331,24 @@ export function ChatInterface({ word, existingCard, onGenerateCard, onBack, save
         throw new Error('生成的卡片数据不完整，请提供更多信息后重试');
       }
 
-      onGenerateCard(data.card);
+      let finalCard = data.card;
+
+      // 如果是继续学习模式且有原始卡片，合并内容
+      if (continueMode && existingCard) {
+        finalCard = {
+          ...data.card,
+          // 追加学习要点
+          learning_notes: existingCard.learning_notes 
+            ? `${existingCard.learning_notes}\n\n${data.card.learning_notes}`
+            : data.card.learning_notes,
+          // 追加助记方法
+          mnemonics: existingCard.mnemonics
+            ? `${existingCard.mnemonics}\n\n${data.card.mnemonics}`
+            : data.card.mnemonics,
+        };
+      }
+
+      onGenerateCard(finalCard);
     } catch (error) {
       console.error('Failed to generate card:', error);
       const errorMessage = error instanceof Error ? error.message : '生成卡片失败，请重试';
@@ -463,7 +491,7 @@ export function ChatInterface({ word, existingCard, onGenerateCard, onBack, save
               d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"
             />
           </svg>
-          {generating ? t('generating') : t('generateCard')}
+          {generating ? t('generating') : (continueMode ? t('updateCard') : t('generateCard'))}
         </button>
       </div>
     </div>
